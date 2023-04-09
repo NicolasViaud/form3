@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
+
+	secret "github.com/form3tech/innsecure/pkg"
 
 	"github.com/form3tech/innsecure"
 	"github.com/form3tech/innsecure/jwtauth"
@@ -28,12 +32,27 @@ func main() {
 		logger = log.With(logger, "caller", log.DefaultCaller)
 	}
 
+	ctx := context.Background()
+
+	vaultSecretProvider, _ := strconv.ParseBool(os.Getenv("VAULT_SECRET_PROVIDER"))
+	vaultRoleName := os.Getenv("VAULT_ROLE_NAME") //Used only if VaultSecretProvider is true.
+	secretProviderConfiguration := secret.Configuration{
+		VaultSecretProvider: vaultSecretProvider,
+		VaultRoleName:       vaultRoleName,
+	}
+	secretProvider, err := secret.NewSecretProvider(ctx, secretProviderConfiguration)
+	if err != nil {
+		panic(err)
+	}
+
 	var s innsecure.Service
 	{
 		host := os.Getenv("DB_HOST")
-		user := os.Getenv("DB_USER")
-		pass := os.Getenv("DB_PASSWORD")
-		db, err := postgres.NewConnection(host, user, pass)
+		databaseCredentials, err := secretProvider.GetDatabaseCredentials(ctx)
+		if err != nil {
+			panic(err)
+		}
+		db, err := postgres.NewConnection(host, databaseCredentials.Username, databaseCredentials.Password)
 		if err != nil {
 			panic(err)
 		}
@@ -45,7 +64,11 @@ func main() {
 
 	var h http.Handler
 	{
-		jwtmw := jwtauth.NewMiddleware("SigningString")
+		hs256Secret, err := secretProvider.GetHS256Secret(ctx)
+		if err != nil {
+			panic(err)
+		}
+		jwtmw := jwtauth.NewMiddleware(hs256Secret)
 		e := innsecure.MakeServerEndpoints(s, jwtmw)
 		h = innsecure.MakeHTTPHandler(e, log.With(logger, "component", "HTTP"))
 	}

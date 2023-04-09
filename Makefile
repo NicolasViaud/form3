@@ -41,14 +41,37 @@ get-docker-images:
 	@docker build . -t form3/innsecure
 	@docker pull postgres:12
 
-start-kind: install-kind get-docker-images
+deploy-vault:
+	@helm repo add hashicorp https://helm.releases.hashicorp.com
+	@helm repo update
+	@kubectl create namespace vault
+	@kubectl create configmap config -n vault --from-file=deployments/vault/innsecure-policy.hcl --from-file=deployments/vault/configuration-dev.sh
+	@helm install vault hashicorp/vault -n vault --values deployments/vault/helm-vault-dev.yml --wait
+	@kubectl wait --for=condition=Ready pod -n vault vault-0
+	@kubectl wait --for=condition=Ready pod -n innsecure -l app=postgres
+	@kubectl exec -n vault vault-0 -- sh /vault/config/configuration-dev.sh
+
+undeploy-vault:
+	@helm uninstall vault -n vault
+	@kubectl delete namespace vault
+
+deploy-application:
+	@kubectl apply -f ./k8s
+
+undeploy-application:
+	@kubectl delete -f ./k8s
+
+start-kind: get-docker-images
 	@kind create cluster
 	@kind load docker-image form3/innsecure
 	@kind load docker-image postgres:12
-	@kubectl apply -f ./k8s
-
+	
 stop-kind:
 	@kind delete cluster
+	
+start-local: install-kind start-kind deploy-application deploy-vault 
+
+stop-local: stop-kind
 	@docker image rm form3/innsecure
 
-.PHONY: clean build test package-% get-docker-images start-kind stop-kind
+.PHONY: clean build test package-% start-local stop-local

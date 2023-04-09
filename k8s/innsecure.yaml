@@ -1,4 +1,10 @@
 apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: innsecure
+  namespace: innsecure
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: innsecure
@@ -31,12 +37,21 @@ spec:
       labels:
         app: innsecure
     spec:
+      serviceAccountName: innsecure
       containers:
         - name: innsecure
           image: form3/innsecure
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: innsecure-config
+      initContainers:
+        - name: wait-for-vault
+          image: curlimages/curl
+          command: ["/bin/sh","-c"]
+          args: ["while [ $(curl -sw '%{http_code}' ${VAULT_ADDR}/v1/sys/health -o /dev/null) -ne 200 ]; do sleep 10; echo 'Waiting for the vault server...'; done"]
           envFrom:
             - configMapRef:
                 name: innsecure-config

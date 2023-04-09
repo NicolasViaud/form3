@@ -67,8 +67,8 @@ spec:
             - containerPort: 5432
               name: postgres
           envFrom:
-            - configMapRef:
-                name: innsecure-config
+            - secretRef:
+                name: postgres-secret
           volumeMounts:
             - mountPath: /docker-entrypoint-initdb.d
               name: hooksqlcode
