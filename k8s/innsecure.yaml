@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: innsecure
+  namespace: innsecure
+  labels:
+    app: innsecure
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      nodePort: 30007
+      protocol: TCP
+  selector:
+    app: innsecure
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: innsecure
+  namespace: innsecure
+  labels:
+    app: innsecure
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: innsecure
+  template:
+    metadata:
+      labels:
+        app: innsecure
+    spec:
+      containers:
+        - name: innsecure
+          image: form3/innsecure
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: innsecure-config
