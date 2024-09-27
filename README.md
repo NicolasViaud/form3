@@ -1,8 +1,8 @@
-InnSecure --- Totally Secure Room Booking
+Application demo for security assessment
 =========================================
+Please, find the security report here: https://github.com/NicolasViaud/form3/pull/1
 
-Innsecure provides a JSON API to manage hotel bookings.
-
+This application provides a JSON API to manage hotel bookings.
 
 ## Prerequisites
 - Install [Docker](https://docs.docker.com/get-docker/)
