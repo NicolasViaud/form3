@@ -6,20 +6,20 @@ This application provides a JSON API to manage hotel bookings.
 
 ## Prerequisites
 - Install [Docker](https://docs.docker.com/get-docker/)
-- Install [kubectl](https://kubernetes.io/docs/tasks/tools/)
+- Install [kubectl](https://kubernetes.io/docs/tasks/tools/)- Install [Helm](https://helm.sh/)
 - Install [Go 1.18](https://golang.org/) (you can use [gvm](https://github.com/moovweb/gvm) for using a particular version)
 
 ## Getting Started
 - `make test` will run unit and end-to-end tests
 - `make build` builds the app and token generator (see 'Generating JWTs, below')
-- `make start-kind` creates a local k8s cluster + builds and spins up the service on port 8080
+- `make start-local` creates a local k8s cluster + builds and spins up the service on port 8080
 
 Then run
 ```
 kubectl port-forward service/innsecure 8080:8080 -n innsecure
 ```
 
-- `make stop-kind` tears down the local k8s cluster
+- `make stop-local` tears down the local k8s cluster
 
 `k8s/` folder contains all the necessary `k8s` manifests to run this application in a production environment.
 

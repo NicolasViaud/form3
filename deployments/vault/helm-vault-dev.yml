@@ -1,0 +1,16 @@
+server:
+  dev:
+    enabled: true
+  volumes:
+    - name: config
+      configMap:
+        name: config
+        items:
+          - key: innsecure-policy.hcl
+            path: innsecure-policy.hcl
+          - key: configuration-dev.sh
+            path: configuration-dev.sh
+  volumeMounts:
+    - mountPath: /vault/config
+      name: config
+      readOnly: true

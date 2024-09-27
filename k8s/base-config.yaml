@@ -14,13 +14,10 @@ metadata:
   labels:
     app: innsecure
 data:
-  POSTGRES_DB: innsecure
-  POSTGRES_USER: root
-  POSTGRES_PASSWORD: YWRtaW4xMjM0
   DB_HOST: postgres
-  DB_USER: root
-  DB_PASSWORD: YWRtaW4xMjM0
-  JWT_SIGNING_STRING: SigningString
+  VAULT_SECRET_PROVIDER: "true"
+  VAULT_ADDR: http://vault.vault.svc.cluster.local:8200
+  VAULT_ROLE_NAME: innsecure
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -39,3 +36,16 @@ data:
       leave TEXT NOT NULL,
       name TEXT NOT NULL
     );
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: innsecure
+  labels:
+    app: postgres-secret
+type: Opaque
+data:
+  POSTGRES_DB: aW5uc2VjdXJl
+  POSTGRES_USER: cm9vdA==
+  POSTGRES_PASSWORD: WVdSdGFXNHhNak0w
